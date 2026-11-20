@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>英語聽力口說練習</title>
+<style>
+:root{--bg:#f4f6fb;--card:#fff;--tx:#1d2433;--mut:#6b7488;--pri:#3b6cf6;--ok:#1f9d55;--okb:#e3f6ea;--bad:#d64545;--badb:#fdeaea;--bd:#d9deeb;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12151d;--card:#1c212d;--tx:#eef1f8;--mut:#9aa3b8;--pri:#6f93ff;--ok:#4cc982;--okb:#16301f;--bad:#ff7a7a;--badb:#3a1c1c;--bd:#2f3647;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#12151d;--card:#1c212d;--tx:#eef1f8;--mut:#9aa3b8;--pri:#6f93ff;--ok:#4cc982;--okb:#16301f;--bad:#ff7a7a;--badb:#3a1c1c;--bd:#2f3647;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:-apple-system,"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;line-height:1.5}
+.wrap{max-width:640px;margin:0 auto;padding:16px}
+h1{font-size:1.25rem;margin:4px 0 2px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.score{color:var(--mut);font-size:.9rem}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:18px;margin-top:14px}
+button{font:inherit;color:var(--tx);cursor:pointer}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.btn{border:1px solid var(--bd);background:var(--card);border-radius:12px;padding:10px 14px}
+.btn.pri{background:var(--pri);border-color:var(--pri);color:#fff;font-weight:600}
+.btn.big{width:100%;padding:14px;font-size:1.1rem}
+.btn:disabled{opacity:.5;cursor:default}
+.qbox{min-height:56px;margin:12px 0;padding:12px;border-radius:12px;background:var(--bg);color:var(--mut);text-align:center}
+.qbox.show{color:var(--tx);font-size:1.1rem;font-weight:600}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+.opt{border:2px solid var(--bd);background:var(--card);border-radius:14px;padding:16px 8px;font-size:1.15rem;font-weight:600;min-height:72px;word-break:break-word}
+.opt small{display:block;color:var(--mut);font-weight:400;font-size:.8rem}
+.opt.ok{border-color:var(--ok);background:var(--okb)}
+.opt.bad{border-color:var(--bad);background:var(--badb)}
+.msg{min-height:48px;padding:12px;border-radius:12px;text-align:center;font-weight:600}
+.msg.ok{background:var(--okb);color:var(--ok)}
+.msg.bad{background:var(--badb);color:var(--bad)}
+.msg.info{background:var(--bg);color:var(--mut);font-weight:400}
+.mic.rec{background:var(--bad);border-color:var(--bad)}
+textarea{width:100%;min-height:340px;font:.9rem/1.5 ui-monospace,Menlo,Consolas,monospace;background:var(--bg);color:var(--tx);border:1px solid var(--bd);border-radius:10px;padding:10px}
+.hint{color:var(--mut);font-size:.85rem}
+label.chk{display:flex;gap:6px;align-items:center;font-size:.9rem;color:var(--mut)}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div><h1>🎧 英語聽力口說練習</h1><div class="score" id="score">答對 0 題 ／ 已作答 0 題</div></div>
+    <button class="btn" id="btnSet">⚙️ 編輯題目</button>
+  </div>
+
+  <div class="card" id="quiz">
+    <button class="btn pri big" id="btnStart">▶ 開始出題</button>
+    <div id="play" class="hidden">
+      <div class="row">
+        <button class="btn" id="btnReplay" style="flex:1">🔊 再聽一次</button>
+        <button class="btn" id="btnSlow" style="flex:1">🐢 慢速：關</button>
+        <button class="btn" id="btnShow" style="flex:1">👀 看文字</button>
+      </div>
+      <div class="qbox" id="qbox">🎧 請仔細聽題目</div>
+      <div class="hint" style="text-align:center">請大聲唸出下面其中一個選項當作答案（點選項可聽發音）</div>
+      <div class="opts" id="opts"></div>
+      <button class="btn pri big mic" id="btnMic">🎤 按一下，開始說答案</button>
+      <div class="msg info" id="msg" style="margin-top:12px">按下麥克風後，唸出你選的答案</div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn" id="btnNext" style="flex:1">⏭ 下一題</button>
+      </div>
+      
+    </div>
+  </div>
+
+  <div class="card hidden" id="settings">
+    <strong>編輯題目與答案</strong>
+    <p class="hint">每題用空白行隔開。<br><b>Q:</b> 題目（會被唸出來）<br><b>A:</b> 正確答案，可寫多個，用 | 分隔（出題時只會隨機顯示其中一個）<br><b>W:</b> 錯誤選項，至少 3 個，用 | 分隔（出題時隨機挑 3 個）</p>
+    <textarea id="ta" spellcheck="false"></textarea>
+    <div class="row" style="margin-top:10px">
+      <button class="btn pri" id="btnSave">💾 儲存</button>
+      <button class="btn" id="btnReset">↺ 還原預設</button>
+      <button class="btn" id="btnClose">關閉</button>
+    </div>
+    <div class="msg info" id="setMsg" style="margin-top:10px;min-height:0;display:none"></div>
+  </div>
+</div>
+
+<script>
+const DEFAULT_TEXT = `Q: What street is our school on?
+A: Chongxin Road
+W: Zhongshan Road | Minzu Road | Jiuru Road
+
+Q: When was our school founded?
+A: In 2001
+W: In 1991 | In 1981 | In 1971
+
+Q: What transportation is near our school?
+A: Highways | Train stations | Metro stations | THSR station
+W: Airports | Harbors | Cable cars
+
+Q: What did our school use to be?
+A: A wetland
+W: A farm | A factory | A military base
+
+Q: There is a sun in our school’s logo. What does it stand for?
+A: Erudition
+W: Cooperation | Excellence | Creativity
+
+Q: There is a bird in our school’s logo. What does it stand for?
+A: Cooperation
+W: Erudition | Excellence | Honesty
+
+Q: There is a mountain in our school’s logo. What does it stand for?
+A: Excellence
+W: Erudition | Cooperation | Courage
+
+Q: There is a water in our school’s logo. What does it stand for?
+A: Creativity
+W: Erudition | Friendship | Honesty
+
+Q: There are fingers in our school’s logo. What does it stand for?
+A: Multi-abilities
+W: Friendship | Courage | Honesty
+
+Q: What color is the boys’ sportswear in Fushan?
+A: Green
+W: Blue | Red | Yellow`;
+
+const $ = id => document.getElementById(id);
+let bank = [], deck = [], cur = null, opts = [], solved = false, listening = false, rec = null;
+let stat = {ok: 0, n: 0}, showTxt = false, firstTry = true, slow = false;
+
+function parse(text){
+  const out = [];
+  for (const blk of text.trim().split(/\n\s*\n/)) {
+    const o = {q:'', a:[], w:[]};
+    for (const line of blk.split('\n')) {
+      const m = line.match(/^\s*([QAW])\s*[:：]\s*(.*)$/i);
+      if (!m) continue;
+      const k = m[1].toUpperCase(), v = m[2].trim();
+      if (k === 'Q') o.q = v;
+      else (k === 'A' ? o.a : o.w).push(...v.split('|').map(s => s.trim()).filter(Boolean));
+    }
+    if (!o.q || !o.a.length || o.w.length < 3) throw new Error('「' + (o.q || blk.slice(0, 30)) + '」需要 Q、至少 1 個 A、至少 3 個 W');
+    out.push(o);
+  }
+  if (!out.length) throw new Error('沒有任何題目');
+  return out;
+}
+function load(){
+  let t = DEFAULT_TEXT;
+  try { t = localStorage.getItem('quiz-text') || DEFAULT_TEXT; } catch(e){}
+  try { bank = parse(t); } catch(e){ bank = parse(DEFAULT_TEXT); t = DEFAULT_TEXT; }
+  $('ta').value = t;
+}
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+/* ---------- speech out ---------- */
+function speak(text){
+  if (!('speechSynthesis' in window)) { setMsg('info', '此瀏覽器不支援語音朗讀'); return; }
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'en-US'; u.rate = slow ? 0.55 : 0.9;
+  const v = speechSynthesis.getVoices().find(v => /^en[-_]US/i.test(v.lang)) || speechSynthesis.getVoices().find(v => /^en/i.test(v.lang));
+  if (v) u.voice = v;
+  speechSynthesis.speak(u);
+}
+
+/* ---------- quiz flow ---------- */
+function setMsg(type, text){ const m = $('msg'); m.className = 'msg ' + type; m.textContent = text; }
+function renderScore(){ $('score').textContent = `答對 ${stat.ok} 題 ／ 已作答 ${stat.n} 題`; }
+function nextQ(){
+  if (listening && rec) { try { rec.abort(); } catch(e){} }
+  if (!deck.length) deck = shuffle(bank.map((_, i) => i));
+  cur = bank[deck.pop()];
+  const correct = shuffle(cur.a)[0];
+  opts = shuffle([{t: correct, c: true}, ...shuffle(cur.w).slice(0, 3).map(t => ({t, c: false}))]);
+  solved = false; firstTry = true; showTxt = false;
+  $('qbox').className = 'qbox'; $('qbox').textContent = '🎧 請仔細聽題目';
+  $('btnShow').textContent = '👀 看文字';
+  renderOpts();
+  setMsg('info', '按下麥克風後，唸出你選的答案');
+  speak(cur.q);
+}
+function renderOpts(){
+  const box = $('opts'); box.innerHTML = '';
+  opts.forEach((o, i) => {
+    const b = document.createElement('button');
+    b.className = 'opt'; b.dataset.i = i;
+    b.innerHTML = '<small>' + 'ABCD'[i] + '</small>';
+    b.appendChild(document.createTextNode(o.t));
+    b.onclick = () => { if (!listening) speak(o.t); };
+    box.appendChild(b);
+  });
+}
+function judge(i, heard){
+  const btns = $('opts').children;
+  if (opts[i].c) {
+    btns[i].className = 'opt ok';
+    setMsg('ok', '✅ 答對了！你說的是「' + opts[i].t + '」');
+    solved = true; stat.n++; if (firstTry) stat.ok++;
+    renderScore();
+    speak('Correct!');
+  } else {
+    btns[i].className = 'opt bad';
+    firstTry = false;
+    setMsg('bad', '❌ 不對喔！你唸的是「' + opts[i].t + '」，這不是正確答案，再聽一次題目，換一個選項試試看！');
+  }
+}
+
+/* ---------- matching ---------- */
+const ONES = ['','one','two','three','four','five','six','seven','eight','nine'];
+const TEENS = ['ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen'];
+const TENS = ['','','twenty','thirty','forty','fifty','sixty','seventy','eighty','ninety'];
+function two(n){ return n < 10 ? ONES[n] : n < 20 ? TEENS[n - 10] : TENS[Math.floor(n / 10)] + (n % 10 ? ' ' + ONES[n % 10] : ''); }
+function yearWords(y){
+  const a = Math.floor(y / 100), b = y % 100;
+  if (y >= 2000 && y < 2010) { const r = b ? ONES[b] : ''; return ['two thousand ' + r, 'two thousand and ' + r, 'twenty oh ' + r].map(s => s.trim()); }
+  if (y >= 2010 && y < 2100) return ['twenty ' + two(b), 'two thousand ' + two(b)];
+  return [two(a) + (b ? ' ' + (b < 10 ? 'oh ' + ONES[b] : two(b)) : ' hundred')];
+}
+function norm(s){
+  return s.toLowerCase().replace(/\b(1\d{3}|20\d{2})\b/g, (m) => yearWords(+m)[0])
+    .replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+function variants(t){
+  const vs = [norm(t)];
+  const m = t.match(/\b(1\d{3}|20\d{2})\b/);
+  if (m) yearWords(+m[1]).forEach(w => vs.push(norm(t.replace(m[1], w))));
+  return vs;
+}
+function lev(a, b){
+  const d = Array.from({length: a.length + 1}, (_, i) => [i, ...Array(b.length).fill(0)]);
+  for (let j = 1; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++)
+    d[i][j] = Math.min(d[i-1][j] + 1, d[i][j-1] + 1, d[i-1][j-1] + (a[i-1] === b[j-1] ? 0 : 1));
+  return d[a.length][b.length];
+}
+const sim = (a, b) => a === b ? 1 : 1 - lev(a, b) / Math.max(a.length, b.length, 1);
+function score(heard, opt){
+  const ht = heard.split(' '), n = opt.split(' ').length;
+  let best = sim(heard, opt);
+  for (let k = Math.max(1, n - 1); k <= n + 1; k++)
+    for (let i = 0; i + k <= ht.length; i++) best = Math.max(best, sim(ht.slice(i, i + k).join(' '), opt));
+  return best;
+}
+function handle(alts){
+  const heards = alts.map(norm).filter(Boolean);
+  const sc = opts.map(o => {
+    const vs = variants(o.t);
+    return Math.max(0, ...heards.flatMap(h => vs.map(v => score(h, v))));
+  });
+  const order = sc.map((s, i) => [s, i]).sort((a, b) => b[0] - a[0]);
+  const [top, second] = [order[0], order[1]];
+  if (top[0] >= 0.62 && (top[0] - second[0] >= 0.08 || top[0] === 1)) judge(top[1], alts[0]);
+  else setMsg('bad', '🤔 我沒聽清楚（聽到：' + (alts[0] || '…') + '）。請靠近麥克風，慢慢、清楚地唸出其中一個選項。');
+}
+
+/* ---------- speech in ---------- */
+function toggleMic(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { setMsg('bad', '此瀏覽器不支援語音辨識，請改用 Chrome 或 Safari 開啟本頁。'); return; }
+  if (solved) { setMsg('info', '這題答對了，請按「下一題」'); return; }
+  if (listening) { try { rec.stop(); } catch(e){} return; }
+  speechSynthesis.cancel();
+  rec = new SR();
+  rec.lang = 'en-US'; rec.maxAlternatives = 5; rec.interimResults = false; rec.continuous = false;
+  let got = false;
+  rec.onstart = () => { listening = true; $('btnMic').classList.add('rec'); $('btnMic').textContent = '🎙️ 聆聽中…請說話（再按一次可停止）'; setMsg('info', '請唸出一個選項…'); };
+  rec.onresult = e => { got = true; const r = e.results[0]; handle(Array.from(r).map(x => x.transcript)); };
+  rec.onerror = e => {
+    got = true;
+    const t = {'not-allowed':'請允許瀏覽器使用麥克風，然後再試一次。','service-not-allowed':'請允許瀏覽器使用麥克風，然後再試一次。','no-speech':'沒有偵測到聲音，請再按一次麥克風並大聲說話。','audio-capture':'找不到麥克風，請檢查裝置。','network':'語音辨識需要網路，請檢查連線。','aborted':''}[e.error];
+    if (t !== '') setMsg('bad', '⚠️ ' + (t || '語音辨識發生問題，請再試一次。') + '（錯誤代碼：' + e.error + '）' + (/not-allowed/.test(e.error) ? ' 若已允許麥克風仍出現，通常是因為頁面被嵌在其他網頁或 App 內，請改用 Chrome／Safari 直接開啟本頁網址。' : ''));
+  };
+  rec.onend = () => { listening = false; $('btnMic').classList.remove('rec'); $('btnMic').textContent = '🎤 按一下，開始說答案'; if (!got && !solved) setMsg('bad', '沒有偵測到聲音，請再按一次麥克風並大聲說話。'); };
+  try { rec.start(); } catch(e){ setMsg('bad', '無法啟動麥克風，請再試一次。'); }
+}
+
+/* ---------- events ---------- */
+$('btnStart').onclick = () => { $('btnStart').classList.add('hidden'); $('play').classList.remove('hidden'); nextQ(); };
+$('btnNext').onclick = nextQ;
+$('btnReplay').onclick = () => cur && speak(cur.q);
+$('btnSlow').onclick = () => {
+  slow = !slow;
+  $('btnSlow').textContent = slow ? '🐢 慢速：開' : '🐢 慢速：關';
+  $('btnSlow').classList.toggle('pri', slow);
+  if (cur) speak(cur.q);
+};
+$('btnShow').onclick = () => {
+  showTxt = !showTxt;
+  const q = $('qbox');
+  q.className = 'qbox' + (showTxt ? ' show' : '');
+  q.textContent = showTxt ? cur.q : '🎧 請仔細聽題目';
+  $('btnShow').textContent = showTxt ? '🙈 隱藏文字' : '👀 看文字';
+};
+$('btnMic').onclick = toggleMic;
+$('btnSet').onclick = () => { $('settings').classList.toggle('hidden'); };
+$('btnClose').onclick = () => $('settings').classList.add('hidden');
+function setNote(ok, t){ const m = $('setMsg'); m.style.display = 'block'; m.className = 'msg ' + (ok ? 'ok' : 'bad'); m.textContent = t; }
+$('btnSave').onclick = () => {
+  try {
+    bank = parse($('ta').value); deck = [];
+    try { localStorage.setItem('quiz-text', $('ta').value); } catch(e){}
+    setNote(true, '已儲存！共 ' + bank.length + ' 題，下一題起生效。');
+  } catch(e){ setNote(false, '格式錯誤：' + e.message); }
+};
+$('btnReset').onclick = () => {
+  $('ta').value = DEFAULT_TEXT; bank = parse(DEFAULT_TEXT); deck = [];
+  try { localStorage.removeItem('quiz-text'); } catch(e){}
+  setNote(true, '已還原為預設 10 題。');
+};
+if ('speechSynthesis' in window) speechSynthesis.getVoices();
+
+load();
+</script>
+</body>
+</html>
