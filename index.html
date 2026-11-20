@@ -30,6 +30,8 @@ button{font:inherit;color:var(--tx);cursor:pointer}
 .opt small{display:block;color:var(--mut);font-weight:400;font-size:.8rem}
 .opt.ok{border-color:var(--ok);background:var(--okb)}
 .opt.bad{border-color:var(--bad);background:var(--badb)}
+.opt .zh{display:none;margin-top:4px;font-size:.95rem;font-weight:500;color:var(--mut)}
+.showzh .opt .zh{display:block}
 .msg{min-height:48px;padding:12px;border-radius:12px;text-align:center;font-weight:600}
 .msg.ok{background:var(--okb);color:var(--ok)}
 .msg.bad{background:var(--badb);color:var(--bad)}
@@ -58,6 +60,7 @@ label.chk{display:flex;gap:6px;align-items:center;font-size:.9rem;color:var(--mu
       </div>
       <div class="qbox" id="qbox">🎧 請仔細聽題目</div>
       <div class="hint" style="text-align:center">請大聲唸出下面其中一個選項當作答案（點選項可聽發音）</div>
+      <button class="btn" id="btnZh" style="width:100%;margin-top:10px">🈯 選項中文：關</button>
       <div class="opts" id="opts"></div>
       <button class="btn pri big mic" id="btnMic">🎤 按一下，開始說答案</button>
       <div class="msg info" id="msg" style="margin-top:12px">按下麥克風後，唸出你選的答案</div>
@@ -70,7 +73,7 @@ label.chk{display:flex;gap:6px;align-items:center;font-size:.9rem;color:var(--mu
 
   <div class="card hidden" id="settings">
     <strong>編輯題目與答案</strong>
-    <p class="hint">每題用空白行隔開。<br><b>Q:</b> 題目（會被唸出來）<br><b>A:</b> 正確答案，可寫多個，用 | 分隔（出題時只會隨機顯示其中一個）<br><b>W:</b> 錯誤選項，至少 3 個，用 | 分隔（出題時隨機挑 3 個）</p>
+    <p class="hint">每題用空白行隔開。<br><b>Q:</b> 題目（會被唸出來）<br><b>A:</b> 正確答案，可寫多個，用 | 分隔（出題時只會隨機顯示其中一個）<br><b>W:</b> 錯誤選項，至少 3 個，用 | 分隔（出題時隨機挑 3 個）<br>每個選項可在英文後面用 = 加上中文，例如：Green=綠色</p>
     <textarea id="ta" spellcheck="false"></textarea>
     <div class="row" style="margin-top:10px">
       <button class="btn pri" id="btnSave">💾 儲存</button>
@@ -83,44 +86,44 @@ label.chk{display:flex;gap:6px;align-items:center;font-size:.9rem;color:var(--mu
 
 <script>
 const DEFAULT_TEXT = `Q: What street is our school on?
-A: Chongxin Road
-W: Zhongshan Road | Minzu Road | Jiuru Road
+A: Chongxin Road=崇信路
+W: Zhongshan Road=中山路 | Minzu Road=民族路 | Jiuru Road=九如路
 
 Q: When was our school founded?
-A: In 2001
-W: In 1991 | In 1981 | In 1971
+A: In 2001=在2001年
+W: In 1991=在1991年 | In 1981=在1981年 | In 1971=在1971年
 
 Q: What transportation is near our school?
-A: Highways | Train stations | Metro stations | THSR station
-W: Airports | Harbors | Cable cars
+A: Highways=高速公路 | Train stations=火車站 | Metro stations=捷運站 | THSR station=高鐵站
+W: Airports=機場 | Harbors=港口 | Cable cars=纜車
 
 Q: What did our school use to be?
-A: A wetland
-W: A farm | A factory | A military base
+A: A wetland=濕地
+W: A farm=農場 | A factory=工廠 | A military base=軍營
 
 Q: There is a sun in our school’s logo. What does it stand for?
-A: Erudition
-W: Cooperation | Excellence | Creativity
+A: Erudition=博學
+W: Cooperation=合作 | Excellence=卓越 | Creativity=創意
 
 Q: There is a bird in our school’s logo. What does it stand for?
-A: Cooperation
-W: Erudition | Excellence | Honesty
+A: Cooperation=合作
+W: Erudition=博學 | Excellence=卓越 | Honesty=誠實
 
 Q: There is a mountain in our school’s logo. What does it stand for?
-A: Excellence
-W: Erudition | Cooperation | Courage
+A: Excellence=卓越
+W: Erudition=博學 | Cooperation=合作 | Courage=勇氣
 
 Q: There is a water in our school’s logo. What does it stand for?
-A: Creativity
-W: Erudition | Friendship | Honesty
+A: Creativity=創意
+W: Erudition=博學 | Friendship=友誼 | Honesty=誠實
 
 Q: There are fingers in our school’s logo. What does it stand for?
-A: Multi-abilities
-W: Friendship | Courage | Honesty
+A: Multi-abilities=多元能力
+W: Friendship=友誼 | Courage=勇氣 | Honesty=誠實
 
 Q: What color is the boys’ sportswear in Fushan?
-A: Green
-W: Blue | Red | Yellow`;
+A: Green=綠色
+W: Blue=藍色 | Red=紅色 | Yellow=黃色`;
 
 const $ = id => document.getElementById(id);
 let bank = [], deck = [], cur = null, opts = [], solved = false, listening = false, rec = null;
@@ -135,7 +138,7 @@ function parse(text){
       if (!m) continue;
       const k = m[1].toUpperCase(), v = m[2].trim();
       if (k === 'Q') o.q = v;
-      else (k === 'A' ? o.a : o.w).push(...v.split('|').map(s => s.trim()).filter(Boolean));
+      else (k === 'A' ? o.a : o.w).push(...v.split('|').map(s => s.trim()).filter(Boolean).map(s => { const p = s.split(/\s*[=＝]\s*/); return {t: p[0].trim(), zh: (p[1] || '').trim()}; }));
     }
     if (!o.q || !o.a.length || o.w.length < 3) throw new Error('「' + (o.q || blk.slice(0, 30)) + '」需要 Q、至少 1 個 A、至少 3 個 W');
     out.push(o);
@@ -170,7 +173,7 @@ function nextQ(){
   if (!deck.length) deck = shuffle(bank.map((_, i) => i));
   cur = bank[deck.pop()];
   const correct = shuffle(cur.a)[0];
-  opts = shuffle([{t: correct, c: true}, ...shuffle(cur.w).slice(0, 3).map(t => ({t, c: false}))]);
+  opts = shuffle([{...correct, c: true}, ...shuffle(cur.w).slice(0, 3).map(x => ({...x, c: false}))]);
   solved = false; firstTry = true; showTxt = false;
   $('qbox').className = 'qbox'; $('qbox').textContent = '🎧 請仔細聽題目';
   $('btnShow').textContent = '👀 看文字';
@@ -185,6 +188,7 @@ function renderOpts(){
     b.className = 'opt'; b.dataset.i = i;
     b.innerHTML = '<small>' + 'ABCD'[i] + '</small>';
     b.appendChild(document.createTextNode(o.t));
+    const z = document.createElement('small'); z.className = 'zh'; z.textContent = o.zh || ''; b.appendChild(z);
     b.onclick = () => { if (!listening) speak(o.t); };
     box.appendChild(b);
   });
@@ -291,6 +295,11 @@ $('btnShow').onclick = () => {
   $('btnShow').textContent = showTxt ? '🙈 隱藏文字' : '👀 看文字';
 };
 $('btnMic').onclick = toggleMic;
+$('btnZh').onclick = () => {
+  const on = $('opts').classList.toggle('showzh');
+  $('btnZh').textContent = on ? '🈯 選項中文：開' : '🈯 選項中文：關';
+  $('btnZh').classList.toggle('pri', on);
+};
 $('btnSet').onclick = () => { $('settings').classList.toggle('hidden'); };
 $('btnClose').onclick = () => $('settings').classList.add('hidden');
 function setNote(ok, t){ const m = $('setMsg'); m.style.display = 'block'; m.className = 'msg ' + (ok ? 'ok' : 'bad'); m.textContent = t; }
