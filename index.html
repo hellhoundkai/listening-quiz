@@ -85,45 +85,45 @@ label.chk{display:flex;gap:6px;align-items:center;font-size:.9rem;color:var(--mu
 </div>
 
 <script>
-const DEFAULT_TEXT = `Q: What street is our school on?
-A: Chongxin Road=崇信路
-W: Zhongshan Road=中山路 | Minzu Road=民族路 | Jiuru Road=九如路
+const DEFAULT_TEXT = 'Q: What color is the sun?
+A: Yellow=黃色
+W: Purple=紫色 | Black=黑色 | White=白色
 
-Q: When was our school founded?
-A: In 2001=在2001年
-W: In 1991=在1991年 | In 1981=在1981年 | In 1971=在1971年
+Q: What animal says “meow”?
+A: Cat=貓
+W: Dog=狗 | Cow=牛 | Duck=鴨子
 
-Q: What transportation is near our school?
-A: Highways=高速公路 | Train stations=火車站 | Metro stations=捷運站 | THSR station=高鐵站
-W: Airports=機場 | Harbors=港口 | Cable cars=纜車
+Q: How many days are there in a week?
+A: Seven=七
+W: Five=五 | Six=六 | Ten=十
 
-Q: What did our school use to be?
-A: A wetland=濕地
-W: A farm=農場 | A factory=工廠 | A military base=軍營
+Q: What do you drink when you are thirsty?
+A: Water=水
+W: Bread=麵包 | Cake=蛋糕 | Rice=米飯
 
-Q: There is a sun in our school’s logo. What does it stand for?
-A: Erudition=博學
-W: Cooperation=合作 | Excellence=卓越 | Creativity=創意
+Q: What do you wear on your feet?
+A: Shoes=鞋子
+W: Hat=帽子 | Gloves=手套 | Glasses=眼鏡
 
-Q: There is a bird in our school’s logo. What does it stand for?
-A: Cooperation=合作
-W: Erudition=博學 | Excellence=卓越 | Honesty=誠實
+Q: Which season is the hottest?
+A: Summer=夏天
+W: Winter=冬天 | Spring=春天 | Autumn=秋天
 
-Q: There is a mountain in our school’s logo. What does it stand for?
-A: Excellence=卓越
-W: Erudition=博學 | Cooperation=合作 | Courage=勇氣
+Q: Which fruit is yellow and long?
+A: Banana=香蕉
+W: Apple=蘋果 | Grape=葡萄 | Watermelon=西瓜
 
-Q: There is a water in our school’s logo. What does it stand for?
-A: Creativity=創意
-W: Erudition=博學 | Friendship=友誼 | Honesty=誠實
+Q: What do you use to write?
+A: A pencil=鉛筆
+W: A spoon=湯匙 | A ball=球 | A chair=椅子
 
-Q: There are fingers in our school’s logo. What does it stand for?
-A: Multi-abilities=多元能力
-W: Friendship=友誼 | Courage=勇氣 | Honesty=誠實
+Q: What day comes after Monday?
+A: Tuesday=星期二
+W: Sunday=星期日 | Wednesday=星期三 | Friday=星期五
 
-Q: What color is the boys’ sportswear in Fushan?
-A: Green=綠色
-W: Blue=藍色 | Red=紅色 | Yellow=黃色`;
+Q: Which animal has a long nose?
+A: Elephant=大象
+W: Tiger=老虎 | Rabbit=兔子 | Lion=獅子`;
 
 const $ = id => document.getElementById(id);
 let bank = [], deck = [], cur = null, opts = [], solved = false, listening = false, rec = null;
