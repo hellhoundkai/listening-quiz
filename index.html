@@ -85,45 +85,45 @@ label.chk{display:flex;gap:6px;align-items:center;font-size:.9rem;color:var(--mu
 </div>
 
 <script>
-const DEFAULT_TEXT = 'Q: What color is the sun?
-A: Yellow=黃色
-W: Purple=紫色 | Black=黑色 | White=白色
+const DEFAULT_TEXT = `Q: What street is our school on?
+A: Chongxin Road=崇信路
+W: Zhongshan Road=中山路 | Minzu Road=民族路 | Jiuru Road=九如路
 
-Q: What animal says “meow”?
-A: Cat=貓
-W: Dog=狗 | Cow=牛 | Duck=鴨子
+Q: When was our school founded?
+A: In 2001=在2001年
+W: In 1991=在1991年 | In 1981=在1981年 | In 1971=在1971年
 
-Q: How many days are there in a week?
-A: Seven=七
-W: Five=五 | Six=六 | Ten=十
+Q: What transportation is near our school?
+A: Highways=高速公路 | Train stations=火車站 | Metro stations=捷運站 | THSR station=高鐵站
+W: Airports=機場 | Harbors=港口 | Cable cars=纜車
 
-Q: What do you drink when you are thirsty?
-A: Water=水
-W: Bread=麵包 | Cake=蛋糕 | Rice=米飯
+Q: What did our school use to be?
+A: A wetland=濕地
+W: A farm=農場 | A factory=工廠 | A military base=軍營
 
-Q: What do you wear on your feet?
-A: Shoes=鞋子
-W: Hat=帽子 | Gloves=手套 | Glasses=眼鏡
+Q: There is a sun in our school’s logo. What does it stand for?
+A: Erudition=博學
+W: Cooperation=合作 | Excellence=卓越 | Creativity=創意
 
-Q: Which season is the hottest?
-A: Summer=夏天
-W: Winter=冬天 | Spring=春天 | Autumn=秋天
+Q: There is a bird in our school’s logo. What does it stand for?
+A: Cooperation=合作
+W: Erudition=博學 | Excellence=卓越 | Honesty=誠實
 
-Q: Which fruit is yellow and long?
-A: Banana=香蕉
-W: Apple=蘋果 | Grape=葡萄 | Watermelon=西瓜
+Q: There is a mountain in our school’s logo. What does it stand for?
+A: Excellence=卓越
+W: Erudition=博學 | Cooperation=合作 | Courage=勇氣
 
-Q: What do you use to write?
-A: A pencil=鉛筆
-W: A spoon=湯匙 | A ball=球 | A chair=椅子
+Q: There is a water in our school’s logo. What does it stand for?
+A: Creativity=創意
+W: Erudition=博學 | Friendship=友誼 | Honesty=誠實
 
-Q: What day comes after Monday?
-A: Tuesday=星期二
-W: Sunday=星期日 | Wednesday=星期三 | Friday=星期五
+Q: There are fingers in our school’s logo. What does it stand for?
+A: Multi-abilities=多元能力
+W: Friendship=友誼 | Courage=勇氣 | Honesty=誠實
 
-Q: Which animal has a long nose?
-A: Elephant=大象
-W: Tiger=老虎 | Rabbit=兔子 | Lion=獅子`;
+Q: What color is the boys’ sportswear in Fushan?
+A: Green=綠色
+W: Blue=藍色 | Red=紅色 | Yellow=黃色`;
 
 const $ = id => document.getElementById(id);
 let bank = [], deck = [], cur = null, opts = [], solved = false, listening = false, rec = null;
@@ -225,6 +225,8 @@ function norm(s){
 }
 function variants(t){
   const vs = [norm(t)];
+  const H = {two:['to','too'],four:['for'],eight:['ate'],one:['won'],five:['fine'],ten:['tan','den'],ears:['years','here','ear'],eyes:['ice','eye'],hat:['hot','had'],pig:['big'],cow:['how'],dog:['dock','dark'],cat:['cut','kat'],white:['wide','why'],yellow:['hello'],green:['screen','grin'],red:['read','right'],blue:['blow'],nose:['knows'],hands:['hand'],bread:['bad'],milk:['mill']};
+  if (H[vs[0]]) vs.push(...H[vs[0]]);
   const m = t.match(/\b(1\d{3}|20\d{2})\b/);
   if (m) yearWords(+m[1]).forEach(w => vs.push(norm(t.replace(m[1], w))));
   return vs;
@@ -237,7 +239,17 @@ function lev(a, b){
   return d[a.length][b.length];
 }
 const sim = (a, b) => a === b ? 1 : 1 - lev(a, b) / Math.max(a.length, b.length, 1);
+function skel(s){
+  return s.replace(/ph/g,'f').replace(/ck/g,'k').replace(/c(?=[eiy])/g,'s').replace(/c/g,'k').replace(/q/g,'k').replace(/x/g,'ks').replace(/z/g,'s')
+    .replace(/(\S)[aeiouyhw]+/g,'$1').replace(/(.)\1+/g,'$1').replace(/ /g,'');
+}
 function score(heard, opt){
+  let b = scoreBase(heard, opt);
+  const a = skel(heard), c = skel(opt);
+  if (c.length >= 3 && a.length >= 2) b = Math.max(b, 0.92 * scoreBase(a, c));
+  return b;
+}
+function scoreBase(heard, opt){
   const ht = heard.split(' '), n = opt.split(' ').length;
   let best = sim(heard, opt);
   for (let k = Math.max(1, n - 1); k <= n + 1; k++)
@@ -252,7 +264,10 @@ function handle(alts){
   });
   const order = sc.map((s, i) => [s, i]).sort((a, b) => b[0] - a[0]);
   const [top, second] = [order[0], order[1]];
-  if (top[0] >= 0.62 && (top[0] - second[0] >= 0.08 || top[0] === 1)) judge(top[1], alts[0]);
+  const ci = opts.findIndex(o => o.c);
+  const bestOther = Math.max(...sc.filter((_, i) => i !== ci));
+  if (sc[ci] >= 0.45 && sc[ci] >= bestOther - 0.1) judge(ci, alts[0]);
+  else if (top[0] >= 0.65 && top[0] - second[0] >= 0.1) judge(top[1], alts[0]);
   else setMsg('bad', '🤔 我沒聽清楚（聽到：' + (alts[0] || '…') + '）。請靠近麥克風，慢慢、清楚地唸出其中一個選項。');
 }
 
