@@ -85,47 +85,45 @@ label.chk{display:flex;gap:6px;align-items:center;font-size:.9rem;color:var(--mu
 </div>
 
 <script>
-const DEFAULT_TEXT = `
-Q: What color is snow?
-A: White=白色
-W: Red=紅色 | Green=綠色 | Black=黑色
+const DEFAULT_TEXT = `Q: What street is our school on?
+A: Chongxin Road=崇信路
+W: Zhongshan Road=中山路 | Minzu Road=民族路 | Jiuru Road=九如路
 
-Q: What animal says “woof”?
-A: Dog=狗
-W: Cat=貓 | Pig=豬 | Bird=鳥
+Q: When was our school founded?
+A: In 2001=在2001年
+W: In 1991=在1991年 | In 1981=在1981年 | In 1971=在1971年
 
-Q: How many fingers are on one hand?
-A: Five=五
-W: Two=二 | Three=三 | Ten=十
+Q: What transportation is near our school?
+A: Highways=高速公路 | Train stations=火車站 | Metro stations=捷運站 | THSR station=高鐵站
+W: Airports=機場 | Harbors=港口 | Cable cars=纜車
 
-Q: Which one is a fruit?
-A: Apple=蘋果
-W: Bread=麵包 | Milk=牛奶 | Egg=蛋
+Q: What did our school use to be?
+A: A wetland=濕地
+W: A farm=農場 | A factory=工廠 | A military base=軍營
 
-Q: What do you use to hear?
-A: Ears=耳朵
-W: Eyes=眼睛 | Nose=鼻子 | Hands=手
+Q: There is a sun in our school’s logo. What does it stand for?
+A: Erudition=博學
+W: Cooperation=合作 | Excellence=卓越 | Creativity=創意
 
-Q: Which day comes after Sunday?
-A: Monday=星期一
-W: Friday=星期五 | Saturday=星期六 | Tuesday=星期二
+Q: There is a bird in our school’s logo. What does it stand for?
+A: Cooperation=合作
+W: Erudition=博學 | Excellence=卓越 | Honesty=誠實
 
-Q: Which animal can fly?
-A: Bird=鳥
-W: Fish=魚 | Dog=狗 | Cow=牛
+Q: There is a mountain in our school’s logo. What does it stand for?
+A: Excellence=卓越
+W: Erudition=博學 | Cooperation=合作 | Courage=勇氣
 
-Q: What is one plus one?
-A: Two=二
-W: Three=三 | Four=四 | Five=五
+Q: There is a water in our school’s logo. What does it stand for?
+A: Creativity=創意
+W: Erudition=博學 | Friendship=友誼 | Honesty=誠實
 
-Q: What do you wear on your head?
-A: Hat=帽子
-W: Shoes=鞋子 | Socks=襪子 | Gloves=手套
+Q: There are fingers in our school’s logo. What does it stand for?
+A: Multi-abilities=多元能力
+W: Friendship=友誼 | Courage=勇氣 | Honesty=誠實
 
-Q: What animal says “moo”?
-A: Cow=牛
-W: Cat=貓 | Duck=鴨子 | Pig=豬
-`;
+Q: What color is the boys’ sportswear in Fushan?
+A: Green=綠色
+W: Blue=藍色 | Red=紅色 | Yellow=黃色`;
 
 const $ = id => document.getElementById(id);
 let bank = [], deck = [], cur = null, opts = [], solved = false, listening = false, rec = null;
@@ -287,7 +285,7 @@ function toggleMic(){
   rec.onresult = e => { got = true; const r = e.results[0]; handle(Array.from(r).map(x => x.transcript)); };
   rec.onerror = e => {
     got = true;
-    const t = {'not-allowed':'請允許瀏覽器使用麥克風，然後再試一次。','service-not-allowed':'請允許瀏覽器使用麥克風，然後再試一次。','no-speech':'沒有偵測到聲音，請再按一次麥克風並大聲說話。','audio-capture':'找不到麥克風，請檢查裝置。','network':'語音辨識需要網路，請檢查連線。','aborted':''}[e.error];
+    const t = {'not-allowed':'請允許瀏覽器使用麥克風，然後再試一次。','service-not-allowed':'語音辨識服務被關閉。iPad 請到「設定 → Siri」開啟 Siri，並到「設定 → 一般 → 鍵盤」開啟「聽寫」。','no-speech':'沒有偵測到聲音，請再按一次麥克風並大聲說話。','audio-capture':'找不到麥克風，請檢查裝置。','network':'語音辨識需要網路，請檢查連線。','aborted':''}[e.error];
     if (t !== '') setMsg('bad', '⚠️ ' + (t || '語音辨識發生問題，請再試一次。') + '（錯誤代碼：' + e.error + '）' + (/not-allowed/.test(e.error) ? ' 若已允許麥克風仍出現，通常是因為頁面被嵌在其他網頁或 App 內，請改用 Chrome／Safari 直接開啟本頁網址。' : ''));
   };
   rec.onend = () => { listening = false; $('btnMic').classList.remove('rec'); $('btnMic').textContent = '🎤 按一下，開始說答案'; if (!got && !solved) setMsg('bad', '沒有偵測到聲音，請再按一次麥克風並大聲說話。'); };
