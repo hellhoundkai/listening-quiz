@@ -33,6 +33,14 @@ select{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(
 .opt.bad{border-color:var(--bad);background:var(--badb)}
 .opt .zh{display:none;margin-top:4px;font-size:.95rem;font-weight:500;color:var(--mut)}
 .showzh .opt .zh{display:block}
+.opt.ok{animation:pop .6s ease}
+.opt.bad{animation:shake .45s ease}
+@keyframes pop{0%{transform:scale(1)}35%{transform:scale(1.15) rotate(-2deg)}65%{transform:scale(1.08) rotate(2deg)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}15%{transform:translateX(-10px)}35%{transform:translateX(10px)}55%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.flash{position:fixed;inset:0;pointer-events:none;z-index:50;animation:fl .7s ease-out forwards}
+.flash.ok{background:rgba(31,157,85,.28)}
+.flash.bad{background:rgba(214,69,69,.28)}
+@keyframes fl{from{opacity:1}to{opacity:0}}
 .msg{min-height:48px;padding:12px;border-radius:12px;text-align:center;font-weight:600}
 .msg.ok{background:var(--okb);color:var(--ok)}
 .msg.bad{background:var(--badb);color:var(--bad)}
@@ -245,18 +253,60 @@ function renderOpts(){
     box.appendChild(b);
   });
 }
+let ac = null;
+function actx(){
+  if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)();
+  if (ac.state === 'suspended') ac.resume();
+  return ac;
+}
+function beep(freqs, dur, type){
+  try {
+    const c = actx(); let t = c.currentTime;
+    freqs.forEach(f => {
+      const o = c.createOscillator(), g = c.createGain();
+      o.type = type; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.25, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + dur + 0.02);
+      t += dur;
+    });
+  } catch(e){}
+}
+function flash(kind){
+  const d = document.createElement('div'); d.className = 'flash ' + kind;
+  document.body.appendChild(d); setTimeout(() => d.remove(), 750);
+}
+function confetti(){
+  const cv = document.createElement('canvas');
+  cv.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:60';
+  const dpr = window.devicePixelRatio || 1;
+  cv.width = innerWidth * dpr; cv.height = innerHeight * dpr;
+  document.body.appendChild(cv);
+  const g = cv.getContext('2d'), cols = ['#f94144','#f3722c','#f9c74f','#90be6d','#43aa8b','#577590','#b5179e'];
+  const ps = Array.from({length: 130}, () => ({x: innerWidth / 2 * dpr, y: innerHeight * 0.45 * dpr, vx: (Math.random() - .5) * 16 * dpr, vy: (-Math.random() * 14 - 4) * dpr, s: (6 + Math.random() * 6) * dpr, r: Math.random() * 6, vr: (Math.random() - .5) * .4, c: cols[Math.floor(Math.random() * cols.length)]}));
+  let f = 0;
+  (function tick(){
+    g.clearRect(0, 0, cv.width, cv.height);
+    ps.forEach(p => { p.vy += 0.35 * dpr; p.x += p.vx; p.y += p.vy; p.r += p.vr; g.save(); g.translate(p.x, p.y); g.rotate(p.r); g.fillStyle = p.c; g.fillRect(-p.s / 2, -p.s / 2, p.s, p.s * 0.6); g.restore(); });
+    if (++f < 120) requestAnimationFrame(tick); else cv.remove();
+  })();
+}
+function fxOk(){ beep([523, 659, 784, 1047], 0.11, 'sine'); flash('ok'); confetti(); }
+function fxBad(){ beep([260, 196], 0.2, 'sawtooth'); flash('bad'); try { navigator.vibrate && navigator.vibrate(220); } catch(e){} }
 function judge(i, heard){
   const btns = $('opts').children;
   if (opts[i].c) {
-    btns[i].className = 'opt ok';
+    btns[i].className = 'opt ok'; fxOk();
     setMsg('ok', '✅ 答對了！你說的是「' + opts[i].t + '」');
     solved = true; stat.n++; if (firstTry) stat.ok++;
     renderScore();
-    speak('Correct!');
+    setTimeout(() => speak('Correct!'), 600);
   } else {
-    btns[i].className = 'opt bad';
+    btns[i].className = 'opt bad'; fxBad();
     firstTry = false;
     setMsg('bad', '❌ 不對喔！你唸的是「' + opts[i].t + '」，這不是正確答案，再聽一次題目，換一個選項試試看！');
+    setTimeout(() => speak('Oops! You said ' + opts[i].t + '. That is not correct. Please listen again and try again.'), 600);
   }
 }
 
@@ -390,6 +440,7 @@ $('btnReset').onclick = () => {
   setNote(true, '已還原為預設 10 題。');
 };
 if ('speechSynthesis' in window) speechSynthesis.getVoices();
+document.addEventListener('pointerdown', () => { try { actx(); } catch(e){} });
 try { const s = localStorage.getItem('quiz-accent'); if (s && [...$('accent').options].some(o => o.value === s)) { accent = s; $('accent').value = s; } } catch(e){}
 $('accent').onchange = () => { accent = $('accent').value; try { localStorage.setItem('quiz-accent', accent); } catch(e){} if (cur) speak(cur.q); };
 
